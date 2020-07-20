@@ -221,12 +221,13 @@ imports:
   DeleteIcon:
     module: '@material-ui/icons/Delete'
     default: true
-  BrowserRouter: react-router-dom
-  Routes: react-router-dom
-  Route: react-router-dom
-  useNavigate: react-router-dom
-  useParams: react-router-dom
-  generatePath: react-router
+  # BrowserRouter: react-router-dom
+  # Routes: react-router-dom
+  # Route: react-router-dom
+  # useNavigate: react-router-dom
+  # useParams: react-router-dom
+  # generatePath: react-router
+  Link: '@reach/router'
   Formik: formik
   useFormikContext: formik
   FormikProps: formik

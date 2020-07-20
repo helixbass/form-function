@@ -10,4 +10,6 @@ export const atOpacity = (opacity: number) => (color: Color): Color =>
 export default {
   black: '#000000',
   white: '#ffffff',
+  peach: '#ffcca5',
+  peachLight: '#ffd8bb',
 }
