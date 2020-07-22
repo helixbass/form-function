@@ -12,4 +12,5 @@ export default {
   white: '#ffffff',
   peach: '#ffcca5',
   peachLight: '#ffd8bb',
+  blue: '#9cdfe0',
 }

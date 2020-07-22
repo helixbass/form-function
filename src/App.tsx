@@ -305,6 +305,19 @@ const Function: FC<FunctionProps> = flowMax(addDisplayName('Function'), () => (
 
 type PageName = 'function' | 'form'
 
+interface ButtonLinkProps {
+  toPage: PageName
+}
+
+const ButtonLink: FC<ButtonLinkProps> = flowMax(
+  addDisplayName('ButtonLink'),
+  ({toPage, children}) => (
+    <Link to={`/${toPage}`} css={styles.button}>
+      {children}
+    </Link>
+  ),
+)
+
 const Content: FC = flowMax(
   addDisplayName('Content'),
   addStateHandlers(
@@ -337,12 +350,8 @@ const Content: FC = flowMax(
   ({currentRoutedPage, currentDisplayedPage, onExited}) => (
     <div css={styles.contentContainer}>
       <div css={styles.buttonsContainer}>
-        <Link to="/form" css={styles.button}>
-          FORM
-        </Link>
-        <Link to="/function" css={styles.button}>
-          FUNCTION
-        </Link>
+        <ButtonLink toPage="form">Form</ButtonLink>
+        <ButtonLink toPage="function">Function</ButtonLink>
       </div>
       <div css={styles.mainContainer}>
         <Transition
@@ -437,6 +446,7 @@ const styles = makeStyles({
     borderStyle: 'solid',
     paddingLeft: '1.8em',
     paddingRight: '1.3em',
+    textTransform: 'uppercase',
   },
   mainContainer: {
     flex: 1,
