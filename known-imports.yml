@@ -228,6 +228,10 @@ imports:
   # useParams: react-router-dom
   # generatePath: react-router
   Link: '@reach/router'
+  useLocation: '@reach/router'
+  Location: '@reach/router'
+  WindowLocation: '@reach/router'
+  LocationContext: '@reach/router'
   Formik: formik
   useFormikContext: formik
   FormikProps: formik
