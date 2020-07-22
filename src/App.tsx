@@ -9,12 +9,18 @@ import {range} from 'lodash'
 import {makeStyles} from 'utils/style'
 import colors from 'utils/colors'
 import {DrawSVGPlugin} from 'utils/gsap/DrawSVGPlugin'
-import {addRefs} from 'utils/refs'
+import {addRefs, RefsProps, ElementRef} from 'utils/refs'
 import addLocation from 'utils/addLocation'
 import typedAs from 'utils/typedAs'
 import {PI, rotateVector} from 'utils/angles'
+import getContextHelpers from 'utils/getContextHelpers'
+import {toObjectKeys} from 'utils/fp'
 
 gsap.registerPlugin(DrawSVGPlugin)
+
+const [addRefsContextProvider, addRefsContext] = getContextHelpers<RefsProps>(
+  toObjectKeys(['refs', 'setRef']),
+)
 
 const SHAPES_WIDTH = 314
 const SHAPES_HEIGHT = 234
@@ -22,12 +28,30 @@ const SHAPES_SCALE = 1.84
 
 const SHAPES_HIDE_CLIP_PATH_ID = 'shapes-hide-clip-path'
 const SHAPES_HIDE_TOP_CORNER = {
-  x: SHAPES_WIDTH * 0.37,
-  y: -SHAPES_HEIGHT * 0.3,
+  x: SHAPES_WIDTH * 0.35,
+  y: -SHAPES_HEIGHT * 0.22,
 }
-const SHAPES_HIDE_NUM_STRIPS = 20
+const SHAPES_HIDE_NUM_STRIPS = 10
 const SHAPES_HIDE_RECT_WIDTH = 250
-const SHAPES_HIDE_RECT_HEIGHT = 300
+const SHAPES_HIDE_RECT_HEIGHT = 230
+const SHAPES_HIDE_SLIDE_RIGHT_UNROTATED_VECTOR = {
+  x: SHAPES_HIDE_RECT_WIDTH,
+  y: 0,
+}
+const SHAPES_HIDE_SLIDE_LEFT_UNROTATED_VECTOR = {
+  x: -SHAPES_HIDE_RECT_WIDTH,
+  y: 0,
+}
+const SHAPES_HIDE_ROTATION_ANGLE = PI / 4
+const SHAPES_HIDE_SLIDE_RIGHT_ROTATED_VECTOR = rotateVector(
+  SHAPES_HIDE_ROTATION_ANGLE,
+)(SHAPES_HIDE_SLIDE_RIGHT_UNROTATED_VECTOR)
+const SHAPES_HIDE_SLIDE_LEFT_ROTATED_VECTOR = rotateVector(
+  SHAPES_HIDE_ROTATION_ANGLE,
+)(SHAPES_HIDE_SLIDE_LEFT_UNROTATED_VECTOR)
+const SHAPES_HIDE_SLIDE_DURATION = 0.3
+const SHAPES_HIDE_DURATION =
+  SHAPES_HIDE_SLIDE_DURATION * SHAPES_HIDE_NUM_STRIPS * 1000
 
 interface ShapesHideStripProps {
   number: number
@@ -43,7 +67,7 @@ const ShapesHideStrip: FC<ShapesHideStripProps> = flowMax(
     ['number'],
   ),
   addProps({
-    rotationAngle: PI / 4,
+    rotationAngle: SHAPES_HIDE_ROTATION_ANGLE,
   }),
   addProps(
     ({startPointTopCornerDistance}) => ({
@@ -88,13 +112,17 @@ const ShapesHideStrip: FC<ShapesHideStripProps> = flowMax(
     }),
     ['rotationAngle'],
   ),
+  addRefsContext,
   ({
     startPoint,
     topEdgeRotatedVector,
     rightEdgeRotatedVector,
     bottomEdgeRotatedVector,
+    setRef,
+    number,
   }) => (
     <path
+      ref={setRef(`shapesHideStrips.${number}`)}
       d={`
             M ${startPoint.x} ${startPoint.y}
             l ${topEdgeRotatedVector.x} ${topEdgeRotatedVector.y}
@@ -130,10 +158,9 @@ interface ShapesProps {
   hide: boolean
 }
 
-const SHAPES_HIDE_DURATION = 2000
 const Shapes: FC<ShapesProps> = flowMax(
   addDisplayName('Shapes'),
-  addRefs,
+  addRefsContext,
   addState('enterTimeline', 'setEnterTimeline', () =>
     gsap.timeline({paused: true}),
   ),
@@ -162,13 +189,22 @@ const Shapes: FC<ShapesProps> = flowMax(
         enterTimeline.play()
         return
       }
-      const {circleScribble} = refs
-      exitTimeline
-        .to(circleScribble, {
-          scale: 0,
-          duration: SHAPES_HIDE_DURATION / 1000,
+      const shapesHideStrips = (refs.shapesHideStrips as unknown) as ElementRef[]
+      shapesHideStrips.forEach((strip, stripIndex) => {
+        exitTimeline.to(strip, {
+          x:
+            stripIndex % 2 === 0
+              ? SHAPES_HIDE_SLIDE_RIGHT_ROTATED_VECTOR.x
+              : SHAPES_HIDE_SLIDE_LEFT_ROTATED_VECTOR.x,
+          y:
+            stripIndex % 2 === 0
+              ? SHAPES_HIDE_SLIDE_RIGHT_ROTATED_VECTOR.y
+              : SHAPES_HIDE_SLIDE_LEFT_ROTATED_VECTOR.y,
+          duration: SHAPES_HIDE_SLIDE_DURATION,
+          ease: 'linear',
         })
-        .play()
+      })
+      exitTimeline.play()
       enterTimeline.pause()
     },
     ['hide'],
@@ -183,7 +219,6 @@ const Shapes: FC<ShapesProps> = flowMax(
         <defs>
           <ShapesHideClipPath />
         </defs>
-        <ShapesHideStrips />
         <g
           ref={setRef('container')}
           clipPath={`url(#${SHAPES_HIDE_CLIP_PATH_ID})`}
@@ -252,14 +287,19 @@ const Content: FC = flowMax(
   ),
 )
 
-const App: FC = flowMax(addDisplayName('App'), () => (
-  <>
-    <link rel="stylesheet" href="https://use.typekit.net/wkh0yki.css" />
-    <div css={styles.container}>
-      <Content />
-    </div>
-  </>
-))
+const App: FC = flowMax(
+  addDisplayName('App'),
+  addRefs,
+  addRefsContextProvider,
+  () => (
+    <>
+      <link rel="stylesheet" href="https://use.typekit.net/wkh0yki.css" />
+      <div css={styles.container}>
+        <Content />
+      </div>
+    </>
+  ),
+)
 
 export default App
 
