@@ -313,6 +313,20 @@ const [
   currentDisplayedPage: PageName
 }>(toObjectKeys(['currentRoutedPage', 'currentDisplayedPage']))
 
+interface StarProps {
+  left?: boolean
+}
+
+const Star: FC<StarProps> = flowMax(addDisplayName('Star'), ({left}) => (
+  <svg
+    viewBox="0 0 108 110"
+    width={21}
+    css={[styles.star, left ? styles.starLeft : styles.starRight]}
+  >
+    <path d="M54,5 86,105 1,43H107L22,105" fill={colors.white} />
+  </svg>
+))
+
 interface ButtonLinkProps {
   toPage: PageName
 }
@@ -328,7 +342,11 @@ const ButtonLink: FC<ButtonLinkProps> = flowMax(
       to={`/${toPage}`}
       css={[styles.button, isCurrentRoutedPage && styles.buttonCurrentRouted]}
     >
-      {children}
+      <span css={styles.buttonText}>
+        <Star left />
+        {children}
+        <Star />
+      </span>
     </Link>
   ),
 )
@@ -505,5 +523,18 @@ const styles = makeStyles({
   },
   buttonCurrentRouted: {
     backgroundColor: colors.blue,
+  },
+  buttonText: {
+    position: 'relative',
+  },
+  star: {
+    position: 'absolute',
+    top: 4,
+  },
+  starLeft: {
+    left: -39,
+  },
+  starRight: {
+    right: -21,
   },
 })
