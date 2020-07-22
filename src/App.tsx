@@ -1,8 +1,19 @@
 import React, {FC} from 'react'
-import {flowMax, addDisplayName, addProps, addEffect, addState} from 'ad-hok'
+import {
+  flowMax,
+  addDisplayName,
+  addProps,
+  addEffect,
+  addState,
+  addStateHandlers,
+} from 'ad-hok'
 import {Link} from '@reach/router'
 import gsap from 'gsap'
-import {addLayoutEffectOnMount} from 'ad-hok-utils'
+import {
+  addLayoutEffectOnMount,
+  suppressUnlessProp,
+  addPropTrackingRef,
+} from 'ad-hok-utils'
 import {Transition} from 'react-transition-group'
 import {range} from 'lodash'
 
@@ -17,6 +28,13 @@ import getContextHelpers from 'utils/getContextHelpers'
 import {toObjectKeys} from 'utils/fp'
 
 gsap.registerPlugin(DrawSVGPlugin)
+
+type TransitionStatus =
+  | 'exiting'
+  | 'exited'
+  | 'entering'
+  | 'entered'
+  | 'unmounted'
 
 const [addRefsContextProvider, addRefsContext] = getContextHelpers<RefsProps>(
   toObjectKeys(['refs', 'setRef']),
@@ -156,6 +174,7 @@ const ShapesHideClipPath: FC = flowMax(
 
 interface ShapesProps {
   hide: boolean
+  transitionState: TransitionStatus
 }
 
 const Shapes: FC<ShapesProps> = flowMax(
@@ -164,28 +183,43 @@ const Shapes: FC<ShapesProps> = flowMax(
   addState('enterTimeline', 'setEnterTimeline', () =>
     gsap.timeline({paused: true}),
   ),
-  addState('exitTimeline', 'setExitTimeline', () =>
-    gsap.timeline({paused: true}),
+  addPropTrackingRef('transitionState', 'transitionStateRef'),
+  addState(
+    'exitTimeline',
+    'setExitTimeline',
+    ({transitionStateRef, enterTimeline}) =>
+      gsap.timeline({
+        paused: true,
+        onComplete: function () {
+          const {current: transitionState} = transitionStateRef
+          if (['exiting', 'exited'].includes(transitionState)) return
+
+          this.progress(0).pause()
+          enterTimeline.restart()
+        },
+      }),
   ),
-  addLayoutEffectOnMount(({refs, enterTimeline}) => () => {
+  addLayoutEffectOnMount(({refs, enterTimeline, setEnterTimeline}) => () => {
     const {circleOutline, circleScribble} = refs
-    enterTimeline
-      .from(circleOutline, {
-        drawSVG: '0%',
-        duration: 1,
-      })
-      .from(circleScribble, {
-        drawSVG: '0%',
-        duration: 6,
-        ease: 'linear',
-      })
-      .play()
+    setEnterTimeline(
+      enterTimeline
+        .from(circleOutline, {
+          drawSVG: '0%',
+          duration: 1,
+        })
+        .from(circleScribble, {
+          drawSVG: '0%',
+          duration: 6,
+          ease: 'linear',
+        })
+        .play(),
+    )
   }),
   // eslint-disable-next-line ad-hok/dependencies
   addEffect(
     ({hide, refs, enterTimeline, exitTimeline}) => () => {
       if (!hide) {
-        exitTimeline.pause()
+        if (exitTimeline.isActive()) return
         enterTimeline.play()
         return
       }
@@ -242,20 +276,48 @@ const Shapes: FC<ShapesProps> = flowMax(
   ),
 )
 
+interface FunctionProps {
+  hide: boolean
+}
+
+const Function: FC<FunctionProps> = flowMax(addDisplayName('Function'), () => (
+  <div css={styles.shapesContainer}>
+    <span style={{position: 'absolute', top: 0, left: 0}}>abc</span>
+  </div>
+))
+
 type PageName = 'function' | 'form'
 
 const Content: FC = flowMax(
   addDisplayName('Content'),
+  addStateHandlers(
+    {
+      currentDisplayedPage: null as PageName | null,
+      currentRoutedPage: null as PageName | null,
+    },
+    {
+      onPageChange: ({currentDisplayedPage}) => (pageName: PageName) => ({
+        currentRoutedPage: pageName,
+        currentDisplayedPage: currentDisplayedPage ?? pageName,
+      }),
+      onExited: ({currentRoutedPage}) => () => ({
+        currentDisplayedPage: currentRoutedPage,
+      }),
+    },
+  ),
   addLocation,
-  addProps(
-    ({location: {pathname}}) => ({
-      currentRoutedPage: typedAs<PageName>(
+  // eslint-disable-next-line ad-hok/dependencies
+  addEffect(
+    ({location: {pathname}, onPageChange}) => () => {
+      const pageName = typedAs<PageName>(
         pathname === '/function' ? 'function' : 'form',
-      ),
-    }),
+      )
+      onPageChange(pageName)
+    },
     ['location.pathname'],
   ),
-  ({currentRoutedPage}) => (
+  suppressUnlessProp(['currentRoutedPage', 'currentDisplayedPage']),
+  ({currentRoutedPage, currentDisplayedPage, onExited}) => (
     <div css={styles.contentContainer}>
       <div css={styles.buttonsContainer}>
         <Link to="/form" css={styles.button}>
@@ -267,20 +329,38 @@ const Content: FC = flowMax(
       </div>
       <div css={styles.mainContainer}>
         <Transition
-          in={currentRoutedPage === 'form'}
+          in={currentRoutedPage === 'form' && currentDisplayedPage === 'form'}
           addEndListener={() => {}}
           timeout={SHAPES_HIDE_DURATION}
+          onExited={() => onExited()}
         >
-          {(state) => {
-            console.log({state})
-            return (
-              <>
-                {['entering', 'entered', 'exiting'].includes(state) && (
-                  <Shapes hide={['exiting'].includes(state)} />
-                )}
-              </>
-            )
-          }}
+          {(state) => (
+            <>
+              {['entering', 'entered', 'exiting'].includes(state) && (
+                <Shapes
+                  hide={['exiting'].includes(state)}
+                  transitionState={state}
+                />
+              )}
+            </>
+          )}
+        </Transition>
+        <Transition
+          in={
+            currentRoutedPage === 'function' &&
+            currentDisplayedPage === 'function'
+          }
+          addEndListener={() => {}}
+          timeout={2000}
+          onExited={() => onExited()}
+        >
+          {(state) => (
+            <>
+              {['entering', 'entered', 'exiting'].includes(state) && (
+                <Function hide={['exiting'].includes(state)} />
+              )}
+            </>
+          )}
         </Transition>
       </div>
     </div>

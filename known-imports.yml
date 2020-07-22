@@ -301,6 +301,8 @@ imports:
   addLayoutEffectOnMount: ad-hok-utils
   cleanupProps: ad-hok-utils
   addExtendedHandlers: ad-hok-utils
+  suppressUnlessProp: ad-hok-utils
+  addPropTrackingRef: ad-hok-utils
   colorUtil:
     module: color
     default: true
