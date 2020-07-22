@@ -305,14 +305,29 @@ const Function: FC<FunctionProps> = flowMax(addDisplayName('Function'), () => (
 
 type PageName = 'function' | 'form'
 
+const [
+  addCurrentPageContextProvider,
+  addCurrentPageContext,
+] = getContextHelpers<{
+  currentRoutedPage: PageName
+  currentDisplayedPage: PageName
+}>(toObjectKeys(['currentRoutedPage', 'currentDisplayedPage']))
+
 interface ButtonLinkProps {
   toPage: PageName
 }
 
 const ButtonLink: FC<ButtonLinkProps> = flowMax(
   addDisplayName('ButtonLink'),
-  ({toPage, children}) => (
-    <Link to={`/${toPage}`} css={styles.button}>
+  addCurrentPageContext,
+  addProps(({toPage, currentRoutedPage}) => ({
+    isCurrentRoutedPage: toPage === currentRoutedPage,
+  })),
+  ({toPage, isCurrentRoutedPage, children}) => (
+    <Link
+      to={`/${toPage}`}
+      css={[styles.button, isCurrentRoutedPage && styles.buttonCurrentRouted]}
+    >
       {children}
     </Link>
   ),
@@ -347,6 +362,7 @@ const Content: FC = flowMax(
     ['location.pathname'],
   ),
   suppressUnlessProp(['currentRoutedPage', 'currentDisplayedPage']),
+  addCurrentPageContextProvider,
   ({currentRoutedPage, currentDisplayedPage, onExited}) => (
     <div css={styles.contentContainer}>
       <div css={styles.buttonsContainer}>
@@ -486,5 +502,8 @@ const styles = makeStyles({
   },
   functionPath: {
     fill: colors.white,
+  },
+  buttonCurrentRouted: {
+    backgroundColor: colors.blue,
   },
 })
