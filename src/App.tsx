@@ -11,6 +11,7 @@ import {addRefsContextProvider} from 'utils/refsContext'
 import ButtonLink from 'components/ButtonLink'
 import Function from 'components/Function'
 import {addRouting} from 'utils/routing'
+import addTypekit from 'utils/addTypekit'
 
 gsap.registerPlugin(DrawSVGPlugin)
 
@@ -32,13 +33,11 @@ const App: FC = flowMax(
   addRefs,
   addRefsContextProvider,
   addRouting,
+  addTypekit('wkh0yki'),
   () => (
-    <>
-      <link rel="stylesheet" href="https://use.typekit.net/wkh0yki.css" />
-      <div css={styles.container}>
-        <Content />
-      </div>
-    </>
+    <div css={styles.container}>
+      <Content />
+    </div>
   ),
 )
 
