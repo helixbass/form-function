@@ -1,15 +1,14 @@
 import React, {FC} from 'react'
 import {range} from 'lodash'
-import {flowMax, addDisplayName, addProps, addState, addEffect} from 'ad-hok'
-import gsap from 'gsap'
-import {addPropTrackingRef, addLayoutEffectOnMount} from 'ad-hok-utils'
+import {flowMax, addDisplayName, addProps} from 'ad-hok'
+import {addLayoutEffectOnMount} from 'ad-hok-utils'
 
 import {PI, rotateVector} from 'utils/angles'
 import {ElementRef} from 'utils/refs'
 import {addRefsContext} from 'utils/refsContext'
 import {makeStyles} from 'utils/style'
 import colors from 'utils/colors'
-import {TransitionStatus} from 'utils/types'
+import addTransitionManagement from 'utils/addTransitionManagement'
 
 const SHAPES_WIDTH = 314
 const SHAPES_HEIGHT = 234
@@ -143,77 +142,41 @@ const ShapesHideClipPath: FC = flowMax(
   ),
 )
 
-interface ShapesProps {
-  hide: boolean
-  transitionState: TransitionStatus
-}
-
-const Shapes: FC<ShapesProps> = flowMax(
+const Shapes: FC = flowMax(
   addDisplayName('Shapes'),
+  addTransitionManagement,
   addRefsContext,
-  addState('enterTimeline', 'setEnterTimeline', () =>
-    gsap.timeline({paused: true}),
-  ),
-  addPropTrackingRef('transitionState', 'transitionStateRef'),
-  addState(
-    'exitTimeline',
-    'setExitTimeline',
-    ({transitionStateRef, enterTimeline}) =>
-      gsap.timeline({
-        paused: true,
-        onComplete: function () {
-          const {current: transitionState} = transitionStateRef
-          if (['exiting', 'exited'].includes(transitionState)) return
-
-          this.progress(0).pause()
-          enterTimeline.restart()
-        },
-      }),
-  ),
-  addLayoutEffectOnMount(({refs, enterTimeline, setEnterTimeline}) => () => {
+  addLayoutEffectOnMount(({refs, enterTimeline, exitTimeline}) => () => {
     const {circleOutline, circleScribble} = refs
-    setEnterTimeline(
-      enterTimeline
-        .from(circleOutline, {
-          drawSVG: '0%',
-          duration: 1,
-        })
-        .from(circleScribble, {
-          drawSVG: '0%',
-          duration: 6,
-          ease: 'linear',
-        })
-        .play(),
-    )
-  }),
-  // eslint-disable-next-line ad-hok/dependencies
-  addEffect(
-    ({hide, refs, enterTimeline, exitTimeline}) => () => {
-      if (!hide) {
-        if (exitTimeline.isActive()) return
-        enterTimeline.play()
-        return
-      }
-      const shapesHideStrips = (refs.shapesHideStrips as unknown) as ElementRef[]
-      shapesHideStrips.forEach((strip, stripIndex) => {
-        exitTimeline.to(strip, {
-          x:
-            stripIndex % 2 === 0
-              ? SHAPES_HIDE_SLIDE_RIGHT_ROTATED_VECTOR.x
-              : SHAPES_HIDE_SLIDE_LEFT_ROTATED_VECTOR.x,
-          y:
-            stripIndex % 2 === 0
-              ? SHAPES_HIDE_SLIDE_RIGHT_ROTATED_VECTOR.y
-              : SHAPES_HIDE_SLIDE_LEFT_ROTATED_VECTOR.y,
-          duration: SHAPES_HIDE_SLIDE_DURATION,
-          ease: 'linear',
-        })
+
+    enterTimeline
+      .from(circleOutline, {
+        drawSVG: '0%',
+        duration: 1,
       })
-      exitTimeline.play()
-      enterTimeline.pause()
-    },
-    ['hide'],
-  ),
+      .from(circleScribble, {
+        drawSVG: '0%',
+        duration: 6,
+        ease: 'linear',
+      })
+      .play()
+
+    const shapesHideStrips = (refs.shapesHideStrips as unknown) as ElementRef[]
+    shapesHideStrips.forEach((strip, stripIndex) => {
+      exitTimeline.to(strip, {
+        x:
+          stripIndex % 2 === 0
+            ? SHAPES_HIDE_SLIDE_RIGHT_ROTATED_VECTOR.x
+            : SHAPES_HIDE_SLIDE_LEFT_ROTATED_VECTOR.x,
+        y:
+          stripIndex % 2 === 0
+            ? SHAPES_HIDE_SLIDE_RIGHT_ROTATED_VECTOR.y
+            : SHAPES_HIDE_SLIDE_LEFT_ROTATED_VECTOR.y,
+        duration: SHAPES_HIDE_SLIDE_DURATION,
+        ease: 'linear',
+      })
+    })
+  }),
   ({setRef}) => (
     <div css={styles.container}>
       <svg

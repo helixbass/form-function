@@ -9,6 +9,7 @@ const [
 ] = getContextHelpers<{
   currentRoutedPage: PageName
   currentDisplayedPage: PageName
-}>(toObjectKeys(['currentRoutedPage', 'currentDisplayedPage']))
+  onExited: () => void
+}>(toObjectKeys(['currentRoutedPage', 'currentDisplayedPage', 'onExited']))
 
 export {addCurrentPageContextProvider, addCurrentPageContext}
