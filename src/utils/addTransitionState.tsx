@@ -12,18 +12,16 @@ import {Transition} from 'react-transition-group'
 
 import {addCurrentPageContext, PageName} from 'utils/routing'
 import {TransitionStatus} from 'utils/types'
-
-interface AddedProps {
-  hide: boolean
-  transitionState: TransitionStatus
-}
+import {HIDE_DURATION} from 'components/HideClipPath'
 
 type AddTransitionStateType = (opts: {
-  timeout: number
   pageName: PageName
-}) => SimplePropsAdder<AddedProps>
+}) => SimplePropsAdder<{
+  hide: boolean
+  transitionState: TransitionStatus
+}>
 
-const addTransitionState: AddTransitionStateType = ({timeout, pageName}) =>
+const addTransitionState: AddTransitionStateType = ({pageName}) =>
   flowMax(
     addCurrentPageContext,
     addWrapper(
@@ -38,7 +36,7 @@ const addTransitionState: AddTransitionStateType = ({timeout, pageName}) =>
             currentRoutedPage === pageName && currentDisplayedPage === pageName
           }
           addEndListener={() => {}}
-          timeout={timeout}
+          timeout={HIDE_DURATION * 1000}
           onExited={onExited}
         >
           {(state) =>

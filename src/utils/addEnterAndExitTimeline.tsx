@@ -2,7 +2,7 @@ import {addState, flowMax} from 'ad-hok'
 import gsap from 'gsap'
 import {cleanupProps, addPropTrackingRef} from 'ad-hok-utils'
 
-import {TransitionStatus} from 'utils/types'
+import {TransitionStatus, Timeline} from 'utils/types'
 
 type AddEnterAndExitTimelineType = <
   TProps extends {
@@ -11,8 +11,8 @@ type AddEnterAndExitTimelineType = <
 >(
   props: TProps,
 ) => TProps & {
-  enterTimeline: gsap.core.Timeline
-  exitTimeline: gsap.core.Timeline
+  enterTimeline: Timeline
+  exitTimeline: Timeline
 }
 
 const addEnterAndExitTimeline: AddEnterAndExitTimelineType = flowMax(

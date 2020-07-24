@@ -1,152 +1,21 @@
 import React, {FC} from 'react'
-import {range} from 'lodash'
 import {flowMax, addDisplayName, addProps} from 'ad-hok'
 import {addLayoutEffectOnMount} from 'ad-hok-utils'
 
-import {PI, rotateVector} from 'utils/angles'
-import {ElementRef} from 'utils/refs'
 import {addRefsContext} from 'utils/refsContext'
 import {makeStyles} from 'utils/style'
 import colors from 'utils/colors'
 import addTransitionManagement from 'utils/addTransitionManagement'
-
-const SHAPES_WIDTH = 314
-const SHAPES_HEIGHT = 234
-const SHAPES_SCALE = 1.84
-
-const SHAPES_HIDE_CLIP_PATH_ID = 'shapes-hide-clip-path'
-const SHAPES_HIDE_TOP_CORNER = {
-  x: SHAPES_WIDTH * 0.35,
-  y: -SHAPES_HEIGHT * 0.22,
-}
-const SHAPES_HIDE_NUM_STRIPS = 10
-const SHAPES_HIDE_RECT_WIDTH = 250
-const SHAPES_HIDE_RECT_HEIGHT = 230
-const SHAPES_HIDE_SLIDE_RIGHT_UNROTATED_VECTOR = {
-  x: SHAPES_HIDE_RECT_WIDTH,
-  y: 0,
-}
-const SHAPES_HIDE_SLIDE_LEFT_UNROTATED_VECTOR = {
-  x: -SHAPES_HIDE_RECT_WIDTH,
-  y: 0,
-}
-const SHAPES_HIDE_ROTATION_ANGLE = PI / 4
-const SHAPES_HIDE_SLIDE_RIGHT_ROTATED_VECTOR = rotateVector(
-  SHAPES_HIDE_ROTATION_ANGLE,
-)(SHAPES_HIDE_SLIDE_RIGHT_UNROTATED_VECTOR)
-const SHAPES_HIDE_SLIDE_LEFT_ROTATED_VECTOR = rotateVector(
-  SHAPES_HIDE_ROTATION_ANGLE,
-)(SHAPES_HIDE_SLIDE_LEFT_UNROTATED_VECTOR)
-const SHAPES_HIDE_SLIDE_DURATION = 0.3
-export const SHAPES_HIDE_DURATION =
-  SHAPES_HIDE_SLIDE_DURATION * SHAPES_HIDE_NUM_STRIPS * 1000
-
-interface ShapesHideStripProps {
-  number: number
-}
-
-const ShapesHideStrip: FC<ShapesHideStripProps> = flowMax(
-  addDisplayName('ShapesHideStrip'),
-  addProps(
-    ({number}) => ({
-      startPointTopCornerDistance:
-        (number / SHAPES_HIDE_NUM_STRIPS) * SHAPES_HIDE_RECT_HEIGHT,
-    }),
-    ['number'],
-  ),
-  addProps({
-    rotationAngle: SHAPES_HIDE_ROTATION_ANGLE,
-  }),
-  addProps(
-    ({startPointTopCornerDistance}) => ({
-      startPointTopCornerUnrotatedVector: {
-        x: 0,
-        y: startPointTopCornerDistance,
-      },
-    }),
-    ['startPointTopCornerDistance'],
-  ),
-  addProps(
-    ({startPointTopCornerUnrotatedVector, rotationAngle}) => ({
-      startPointTopCornerRotatedVector: rotateVector(rotationAngle)(
-        startPointTopCornerUnrotatedVector,
-      ),
-    }),
-    ['startPointTopCornerUnrotatedVector', 'rotationAngle'],
-  ),
-  addProps(
-    ({startPointTopCornerRotatedVector}) => ({
-      startPoint: {
-        x: SHAPES_HIDE_TOP_CORNER.x + startPointTopCornerRotatedVector.x,
-        y: SHAPES_HIDE_TOP_CORNER.y + startPointTopCornerRotatedVector.y,
-      },
-    }),
-    ['startPointTopCornerRotatedVector'],
-  ),
-  addProps(
-    ({rotationAngle}) => ({
-      topEdgeRotatedVector: rotateVector(rotationAngle)({
-        x: SHAPES_HIDE_RECT_WIDTH,
-        y: 0,
-      }),
-      rightEdgeRotatedVector: rotateVector(rotationAngle)({
-        x: 0,
-        y: (SHAPES_HIDE_RECT_HEIGHT / SHAPES_HIDE_NUM_STRIPS) * 1.1,
-      }),
-      bottomEdgeRotatedVector: rotateVector(rotationAngle)({
-        x: -SHAPES_HIDE_RECT_WIDTH,
-        y: 0,
-      }),
-    }),
-    ['rotationAngle'],
-  ),
-  addRefsContext,
-  ({
-    startPoint,
-    topEdgeRotatedVector,
-    rightEdgeRotatedVector,
-    bottomEdgeRotatedVector,
-    setRef,
-    number,
-  }) => (
-    <path
-      ref={setRef(`shapesHideStrips.${number}`)}
-      d={`
-            M ${startPoint.x} ${startPoint.y}
-            l ${topEdgeRotatedVector.x} ${topEdgeRotatedVector.y}
-            l ${rightEdgeRotatedVector.x} ${rightEdgeRotatedVector.y}
-            l ${bottomEdgeRotatedVector.x} ${bottomEdgeRotatedVector.y}
-            Z
-          `}
-      fill="none"
-      stroke="pink"
-      strokeWidth={2}
-    />
-  ),
-)
-
-const ShapesHideStrips: FC = flowMax(addDisplayName('ShapesHideStrips'), () => (
-  <>
-    {range(SHAPES_HIDE_NUM_STRIPS).map((stripNum) => (
-      <ShapesHideStrip number={stripNum} key={stripNum} />
-    ))}
-  </>
-))
-
-const ShapesHideClipPath: FC = flowMax(
-  addDisplayName('ShapesHideClipPath'),
-  () => (
-    <clipPath id={SHAPES_HIDE_CLIP_PATH_ID}>
-      <ShapesHideStrips />
-    </clipPath>
-  ),
-)
+import HideClipPath, {HIDE_CLIP_PATH_ID} from 'components/HideClipPath'
+import {addSizeContextProvider} from 'utils/sizeContext'
 
 const Shapes: FC = flowMax(
   addDisplayName('Shapes'),
-  addTransitionManagement,
+  addTransitionManagement({
+    pageName: 'form',
+  }),
   addRefsContext,
-  addLayoutEffectOnMount(({refs, enterTimeline, exitTimeline}) => () => {
+  addLayoutEffectOnMount(({refs, enterTimeline}) => () => {
     const {circleOutline, circleScribble} = refs
 
     enterTimeline
@@ -160,38 +29,24 @@ const Shapes: FC = flowMax(
         ease: 'linear',
       })
       .play()
-
-    const shapesHideStrips = (refs.shapesHideStrips as unknown) as ElementRef[]
-    shapesHideStrips.forEach((strip, stripIndex) => {
-      exitTimeline.to(strip, {
-        x:
-          stripIndex % 2 === 0
-            ? SHAPES_HIDE_SLIDE_RIGHT_ROTATED_VECTOR.x
-            : SHAPES_HIDE_SLIDE_LEFT_ROTATED_VECTOR.x,
-        y:
-          stripIndex % 2 === 0
-            ? SHAPES_HIDE_SLIDE_RIGHT_ROTATED_VECTOR.y
-            : SHAPES_HIDE_SLIDE_LEFT_ROTATED_VECTOR.y,
-        duration: SHAPES_HIDE_SLIDE_DURATION,
-        ease: 'linear',
-      })
-    })
   }),
-  ({setRef}) => (
+  addProps({
+    scale: 1.84,
+    width: 314,
+    height: 234,
+  }),
+  addSizeContextProvider,
+  ({setRef, scale, width, height}) => (
     <div css={styles.container}>
       <svg
-        viewBox={`0 0 ${SHAPES_WIDTH} ${SHAPES_HEIGHT}`}
-        height={SHAPES_HEIGHT * SHAPES_SCALE}
-        width={SHAPES_WIDTH * SHAPES_SCALE}
+        viewBox={`0 0 ${width} ${height}`}
+        height={height * scale}
+        width={width * scale}
       >
         <defs>
-          <ShapesHideClipPath />
+          <HideClipPath />
         </defs>
-        <g
-          ref={setRef('container')}
-          clipPath={`url(#${SHAPES_HIDE_CLIP_PATH_ID})`}
-          fill="black"
-        >
+        <g clipPath={`url(#${HIDE_CLIP_PATH_ID})`}>
           <circle
             ref={setRef('circleOutline')}
             cx="113.2"

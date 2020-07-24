@@ -4,3 +4,5 @@ export type TransitionStatus =
   | 'entering'
   | 'entered'
   | 'unmounted'
+
+export type Timeline = gsap.core.Timeline
