@@ -6,11 +6,30 @@ import {addRefsContext} from 'utils/refsContext'
 import {makeStyles} from 'utils/style'
 import colors from 'utils/colors'
 import addTransitionManagement from 'utils/addTransitionManagement'
-import HideClipPath, {HIDE_CLIP_PATH_ID} from 'components/HideClipPath'
-import {addSizeContextProvider} from 'utils/sizeContext'
+import HideClipPath, {
+  HIDE_CLIP_PATH_ID,
+  addHideClipPathContextProvider,
+} from 'components/HideClipPath'
 
 const Shapes: FC = flowMax(
   addDisplayName('Shapes'),
+  addProps({
+    scale: 1.84,
+    width: 314,
+    height: 234,
+    hideRectangleWidth: 250,
+    hideRectangleHeight: 230,
+  }),
+  addProps(
+    ({width, height}) => ({
+      hideRectangleTopCorner: {
+        x: width * 0.35,
+        y: -height * 0.22,
+      },
+    }),
+    ['width', 'height'],
+  ),
+  addHideClipPathContextProvider,
   addTransitionManagement({
     pageName: 'form',
   }),
@@ -30,12 +49,6 @@ const Shapes: FC = flowMax(
       })
       .play()
   }),
-  addProps({
-    scale: 1.84,
-    width: 314,
-    height: 234,
-  }),
-  addSizeContextProvider,
   ({setRef, scale, width, height}) => (
     <div css={styles.container}>
       <svg

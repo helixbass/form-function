@@ -5,7 +5,10 @@ import addTransitionState from 'utils/addTransitionState'
 import addEnterAndExitTimeline from 'utils/addEnterAndExitTimeline'
 import {PageName} from 'utils/routing'
 import {addRefsContext} from 'utils/refsContext'
-import {initializeExitTimelineHideStripsAnimation} from 'components/HideClipPath'
+import {
+  initializeExitTimelineHideStripsAnimation,
+  addHideClipPathContext,
+} from 'components/HideClipPath'
 
 type AddTransitionManagementType = (opts: {
   pageName: PageName
@@ -19,8 +22,13 @@ const addTransitionManagement: AddTransitionManagementType = (opts) =>
     addTransitionState(opts),
     addEnterAndExitTimeline,
     addRefsContext,
-    addLayoutEffectOnMount(({refs, exitTimeline}) => () => {
-      initializeExitTimelineHideStripsAnimation({refs, exitTimeline})
+    addHideClipPathContext,
+    addLayoutEffectOnMount(({refs, exitTimeline, hideRectangleWidth}) => () => {
+      initializeExitTimelineHideStripsAnimation({
+        refs,
+        exitTimeline,
+        hideRectangleWidth,
+      })
     }),
     // eslint-disable-next-line ad-hok/dependencies
     addEffect(

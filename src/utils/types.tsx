@@ -6,3 +6,8 @@ export type TransitionStatus =
   | 'unmounted'
 
 export type Timeline = gsap.core.Timeline
+
+export interface Point {
+  x: number
+  y: number
+}

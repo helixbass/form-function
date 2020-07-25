@@ -4,50 +4,68 @@ import {flowMax, addDisplayName, addProps} from 'ad-hok'
 
 import {PI, rotateVector} from 'utils/angles'
 import {addRefsContext} from 'utils/refsContext'
-import {addSizeContext} from 'utils/sizeContext'
 import {ElementRef, Refs} from 'utils/refs'
-import {Timeline} from 'utils/types'
+import {Timeline, Point} from 'utils/types'
+import getContextHelpers from 'utils/getContextHelpers'
+import {toObjectKeys} from 'utils/fp'
+
+const [
+  addHideClipPathContextProvider,
+  addHideClipPathContext,
+] = getContextHelpers<{
+  hideRectangleWidth: number
+  hideRectangleHeight: number
+  hideRectangleTopCorner: Point
+}>(
+  toObjectKeys([
+    'hideRectangleWidth',
+    'hideRectangleHeight',
+    'hideRectangleTopCorner',
+  ]),
+)
+
+export {addHideClipPathContextProvider, addHideClipPathContext}
 
 export const HIDE_CLIP_PATH_ID = 'shapes-hide-clip-path'
 const NUM_STRIPS = 10
-const RECT_WIDTH = 250
-const RECT_HEIGHT = 230
-const SLIDE_RIGHT_UNROTATED_VECTOR = {
-  x: RECT_WIDTH,
-  y: 0,
-}
-const SLIDE_LEFT_UNROTATED_VECTOR = {
-  x: -RECT_WIDTH,
-  y: 0,
-}
 const ROTATION_ANGLE = PI / 4
-const SLIDE_RIGHT_ROTATED_VECTOR = rotateVector(ROTATION_ANGLE)(
-  SLIDE_RIGHT_UNROTATED_VECTOR,
-)
-const SLIDE_LEFT_ROTATED_VECTOR = rotateVector(ROTATION_ANGLE)(
-  SLIDE_LEFT_UNROTATED_VECTOR,
-)
 const SLIDE_DURATION = 0.3
 export const HIDE_DURATION = SLIDE_DURATION * NUM_STRIPS
 
 export const initializeExitTimelineHideStripsAnimation = ({
   refs,
   exitTimeline,
+  hideRectangleWidth,
 }: {
   refs: Refs
   exitTimeline: Timeline
+  hideRectangleWidth: number
 }) => {
+  const slideRightUnrotatedVector = {
+    x: hideRectangleWidth,
+    y: 0,
+  }
+  const slideLeftUnrotatedVector = {
+    x: -hideRectangleWidth,
+    y: 0,
+  }
+  const slideRightRotatedVector = rotateVector(ROTATION_ANGLE)(
+    slideRightUnrotatedVector,
+  )
+  const slideLeftRotatedVector = rotateVector(ROTATION_ANGLE)(
+    slideLeftUnrotatedVector,
+  )
   const hideStrips = (refs.hideStrips as unknown) as ElementRef[]
   hideStrips.forEach((strip, stripIndex) => {
     exitTimeline.to(strip, {
       x:
         stripIndex % 2 === 0
-          ? SLIDE_RIGHT_ROTATED_VECTOR.x
-          : SLIDE_LEFT_ROTATED_VECTOR.x,
+          ? slideRightRotatedVector.x
+          : slideLeftRotatedVector.x,
       y:
         stripIndex % 2 === 0
-          ? SLIDE_RIGHT_ROTATED_VECTOR.y
-          : SLIDE_LEFT_ROTATED_VECTOR.y,
+          ? slideRightRotatedVector.y
+          : slideLeftRotatedVector.y,
       duration: SLIDE_DURATION,
       ease: 'linear',
     })
@@ -60,11 +78,12 @@ interface StripProps {
 
 const Strip: FC<StripProps> = flowMax(
   addDisplayName('Strip'),
+  addHideClipPathContext,
   addProps(
-    ({number}) => ({
-      startPointTopCornerDistance: (number / NUM_STRIPS) * RECT_HEIGHT,
+    ({number, hideRectangleHeight}) => ({
+      startPointTopCornerDistance: (number / NUM_STRIPS) * hideRectangleHeight,
     }),
-    ['number'],
+    ['number', 'hideRectangleHeight'],
   ),
   addProps({
     rotationAngle: ROTATION_ANGLE,
@@ -86,41 +105,34 @@ const Strip: FC<StripProps> = flowMax(
     }),
     ['startPointTopCornerUnrotatedVector', 'rotationAngle'],
   ),
-  addSizeContext,
   addProps(
-    ({width, height}) => ({
-      topCorner: {
-        x: width * 0.35,
-        y: -height * 0.22,
-      },
-    }),
-    ['width', 'height'],
-  ),
-  addProps(
-    ({startPointTopCornerRotatedVector, topCorner}) => ({
+    ({
+      startPointTopCornerRotatedVector,
+      hideRectangleTopCorner: topCorner,
+    }) => ({
       startPoint: {
         x: topCorner.x + startPointTopCornerRotatedVector.x,
         y: topCorner.y + startPointTopCornerRotatedVector.y,
       },
     }),
-    ['startPointTopCornerRotatedVector', 'topCorner'],
+    ['startPointTopCornerRotatedVector', 'hideRectangleTopCorner'],
   ),
   addProps(
-    ({rotationAngle}) => ({
+    ({rotationAngle, hideRectangleWidth, hideRectangleHeight}) => ({
       topEdgeRotatedVector: rotateVector(rotationAngle)({
-        x: RECT_WIDTH,
+        x: hideRectangleWidth,
         y: 0,
       }),
       rightEdgeRotatedVector: rotateVector(rotationAngle)({
         x: 0,
-        y: (RECT_HEIGHT / NUM_STRIPS) * 1.1,
+        y: (hideRectangleHeight / NUM_STRIPS) * 1.1,
       }),
       bottomEdgeRotatedVector: rotateVector(rotationAngle)({
-        x: -RECT_WIDTH,
+        x: -hideRectangleWidth,
         y: 0,
       }),
     }),
-    ['rotationAngle'],
+    ['rotationAngle', 'hideRectangleWidth', 'hideRectangleHeight'],
   ),
   addRefsContext,
   ({
@@ -147,7 +159,7 @@ const Strip: FC<StripProps> = flowMax(
   ),
 )
 
-const Strips: FC = flowMax(addDisplayName('Strips'), () => (
+export const Strips: FC = flowMax(addDisplayName('Strips'), () => (
   <>
     {range(NUM_STRIPS).map((stripNum) => (
       <Strip number={stripNum} key={stripNum} />

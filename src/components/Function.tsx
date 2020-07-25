@@ -6,11 +6,30 @@ import {makeStyles} from 'utils/style'
 import colors from 'utils/colors'
 import addTransitionManagement from 'utils/addTransitionManagement'
 import {addRefsContext} from 'utils/refsContext'
-import {addSizeContextProvider} from 'utils/sizeContext'
-import HideClipPath, {HIDE_CLIP_PATH_ID} from 'components/HideClipPath'
+import HideClipPath, {
+  HIDE_CLIP_PATH_ID,
+  addHideClipPathContextProvider,
+} from 'components/HideClipPath'
 
 const Function: FC = flowMax(
   addDisplayName('Function'),
+  addProps({
+    scale: 1.4,
+    width: 314,
+    height: 234,
+    hideRectangleWidth: 240,
+    hideRectangleHeight: 300,
+  }),
+  addProps(
+    ({width, height}) => ({
+      hideRectangleTopCorner: {
+        x: width * 0.45,
+        y: -height * 0.42,
+      },
+    }),
+    ['width', 'height'],
+  ),
+  addHideClipPathContextProvider,
   addTransitionManagement({
     pageName: 'function',
   }),
@@ -30,12 +49,6 @@ const Function: FC = flowMax(
       // })
       .play()
   }),
-  addProps({
-    scale: 1.84,
-    width: 314,
-    height: 234,
-  }),
-  addSizeContextProvider,
   ({setRef: _setRef, scale, width, height}) => (
     <div css={styles.container}>
       <svg
