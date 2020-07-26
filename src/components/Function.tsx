@@ -75,6 +75,36 @@ const RightParenMask: FC = flowMax(addDisplayName('RightParenMask'), () => (
   </mask>
 ))
 
+const XMaskShape: FC = flowMax(
+  addDisplayName('XMaskShape'),
+  addRefsContext,
+  ({setRef}) => (
+    <>
+      <path
+        ref={setRef('functionMasks.xBackslash')}
+        d="M 145 58 l 9 30 l 7 24 l 7 10"
+        fill="none"
+        stroke="white"
+        strokeWidth={15}
+      />
+      <path
+        ref={setRef('functionMasks.xForwardSlash')}
+        d="M 130 120 l 60 -70"
+        fill="none"
+        stroke="white"
+        strokeWidth={15}
+      />
+    </>
+  ),
+)
+
+const X_MASK_ID = 'x-mask'
+const XMask: FC = flowMax(addDisplayName('XMask'), () => (
+  <mask id={X_MASK_ID}>
+    <XMaskShape />
+  </mask>
+))
+
 const Function: FC = flowMax(
   addDisplayName('Function'),
   addProps({
@@ -99,7 +129,13 @@ const Function: FC = flowMax(
   }),
   addRefsContext,
   addLayoutEffectOnMount(({refs, enterTimeline}) => () => {
-    const {f, leftParen, rightParen} = (refs.functionMasks as unknown) as {
+    const {
+      f,
+      leftParen,
+      rightParen,
+      xBackslash,
+      xForwardSlash,
+    } = (refs.functionMasks as unknown) as {
       [refName: string]: ElementRef
     }
 
@@ -112,6 +148,16 @@ const Function: FC = flowMax(
       .from(leftParen, {
         drawSVG: '100% 100%',
         duration: 0.33,
+        ease: 'linear',
+      })
+      .from(xBackslash, {
+        drawSVG: '0%',
+        duration: 0.3,
+        ease: 'linear',
+      })
+      .from(xForwardSlash, {
+        drawSVG: '0%',
+        duration: 0.3,
         ease: 'linear',
       })
       .from(rightParen, {
@@ -133,6 +179,7 @@ const Function: FC = flowMax(
           <FMask />
           <LeftParenMask />
           <RightParenMask />
+          <XMask />
         </defs>
         <g clipPath={`url(#${HIDE_CLIP_PATH_ID})`}>
           <path
@@ -146,6 +193,7 @@ const Function: FC = flowMax(
             css={styles.functionPath}
           />
           <path
+            mask={`url(#${X_MASK_ID})`}
             d="M148.4,58c2.4,0,3.8,1.1,5.1,3.1c0.7,1.3,5.4,17.6,5.4,17.6l4.9-6.3c4-4.9,12.5-15,18.1-17.8 c0.9-0.5,1.6-1.6,2.7-1.6c0.9,0,1.8-0.5,2.7-0.5c0.4,0,0.7,0,1.3,0.2c0.2,0.5,0.7,1.8,0.7,2.4s-1.6,1.1-2,1.1 c-0.4,0.2-0.5,0.2-0.7,0.2c0.2,0.7,0.4,0.7,0.5,0.7h0.7c-0.4,0.4-0.4,0.5-0.5,0.5l-1.5,1.1c-4.9,4.5-24.3,27.7-24.3,30.6 c2,8.7,4.5,19.2,10.5,26.8c0.2,0.2,0.9,0.5,0.9,0.9c0,0.2-0.2,0.4-0.5,0.7c-0.2,0.4-0.4,0.5-0.7,0.5c-0.4,0-0.7,0-1.1,0 c0.2,0.2,0.5,0.2,0.5,0.2v0.9c0,0-0.7-0.2-1.1-0.5c0-0.2-0.4-0.2-0.5-0.2c0,0.5-0.4,0.7-0.9,0.7c-0.7,0-1.3,0.2-2.2,0.5 c-0.4,0.2-0.7,0.2-1.1,0.2c-0.7,0-3.1,1.6-4.2,1.6c-1.8,0-2.5-0.9-3.3-2c-2-2.2-5.4-9.8-7.4-16.3c-2.9,4.3-9.8,14.1-11.6,15.2 l-1.6,1.1c-0.4,0-0.5,0-0.7-0.2c0,0-0.2-0.7-0.2-0.9c-0.2,0-0.7,0.2-1.1,0.2s-1.1-1.8-1.3-1.8c0,0-0.5,1.1-1.6,1.1 c-0.2,0-0.4,0-0.5-0.2c-1.5,0-2-0.7-2.7-1.5c0-0.2,0.2-0.9,0.4-1.1c2.7-0.2,4.3-2.7,5.6-4.7c3.6-5.4,6-8.3,9.8-13.8l2.4-3.6v-0.7 c0-0.2,0-0.4-0.2-0.5l-5.1-19.2c-0.5-2.4-3.4-8-3.4-10.1c0-0.7,1.5-1.6,1.6-1.6c0.4,0,0.7,0.4,0.9,0.4 C142.8,59.8,146.1,58,148.4,58z M160.2,120l-0.5-0.4l-2.5-4l0.9,2c0,0.9,1.1,2.7,1.5,2.9c0.5,0.5,0.7,0.5,0.7,0.5 c0.2,0,0.4,0,0.5-0.2C160.8,120.5,160.2,120.2,160.2,120z M163.3,82.3c-0.2,0.2-0.4,0.4-0.4,0.7c-0.2,0.2-0.4,0.2-0.4,0.7 c-0.2,0.2-0.2,0.4-0.2,0.5V85c0,0.4,0,0.5-0.2,0.5l-1.1,1.1l0.4,1.1l1.3-2c0.4-0.4,0.4-1.3,0.5-1.3l0.9-0.2 c0.2-0.2,0.2-0.4,0.2-0.5c-0.2,0-0.5-0.2-0.7-0.4l1.1-0.4l0.9-1.3l-1.1,0.7c0.4-0.7,0.7-0.9,0.9-1.1l1.8-1.8 c0.4-0.4,0.4-0.7,0.5-1.1c-0.5,0.5-0.5,0.7-0.5,0.7l-0.7,0.4l-1.1,1.1c-0.2,0.5-0.5,0.9-1.5,1.1C164,81.9,163.7,81.9,163.3,82.3z M164.6,82.5l-1.8,1.3l0.2-0.7C163.5,82.6,164.4,82.5,164.6,82.5z M168,112.4l-1.6-1.1l-0.5,0.4l0.5,0.4c0.2,0.2,0.4,0.2,1.1,0.2 C167.6,112.2,168,112.4,168,112.4z M168,112.9h-0.9c-0.2,0.2-0.2,0.4-0.2,0.7l0.4,1.1c0,0.5,0.4,0.9,0.5,1.3c0-0.2-0.2-0.4-0.2-0.5 c0-0.2,0.2-0.4,0.4-0.4c0.2,0.2,0.2,0.4,0.2,0.7c0-0.4,0-0.5,0.5-1.1l-0.9,0.2c0.2-0.2,0.2-0.5,0.2-0.7 C168,113.6,168,113.5,168,112.9z M168.9,76.7l-0.2,1.1c0.4-0.7,1.8-2.7,2.9-3.6l3.4-4.2C172.7,72,169.6,76.1,168.9,76.7z M179.1,65.1c0-0.2,0.4-0.7,0.5-0.9c-0.4,0.2-1.1,0.5-1.1,0.7C178.5,64.9,178.9,65.1,179.1,65.1z"
             css={styles.functionPath}
           />
