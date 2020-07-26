@@ -2,7 +2,7 @@ import React, {FC} from 'react'
 import {range} from 'lodash'
 import {flowMax, addDisplayName, addProps} from 'ad-hok'
 
-import {PI, rotateVector} from 'utils/angles'
+import {rotateVector, Angle} from 'utils/angles'
 import {addRefsContext} from 'utils/refsContext'
 import {ElementRef, Refs} from 'utils/refs'
 import {Timeline, Point} from 'utils/types'
@@ -16,11 +16,13 @@ const [
   hideRectangleWidth: number
   hideRectangleHeight: number
   hideRectangleTopCorner: Point
+  hideRectangleRotationAngle: Angle
 }>(
   toObjectKeys([
     'hideRectangleWidth',
     'hideRectangleHeight',
     'hideRectangleTopCorner',
+    'hideRectangleRotationAngle',
   ]),
 )
 
@@ -28,7 +30,6 @@ export {addHideClipPathContextProvider, addHideClipPathContext}
 
 export const HIDE_CLIP_PATH_ID = 'shapes-hide-clip-path'
 const NUM_STRIPS = 10
-const ROTATION_ANGLE = PI / 4
 const SLIDE_DURATION = 0.3
 export const HIDE_DURATION = SLIDE_DURATION * NUM_STRIPS
 
@@ -36,10 +37,12 @@ export const initializeExitTimelineHideStripsAnimation = ({
   refs,
   exitTimeline,
   hideRectangleWidth,
+  hideRectangleRotationAngle,
 }: {
   refs: Refs
   exitTimeline: Timeline
   hideRectangleWidth: number
+  hideRectangleRotationAngle: Angle
 }) => {
   const slideRightUnrotatedVector = {
     x: hideRectangleWidth,
@@ -49,10 +52,10 @@ export const initializeExitTimelineHideStripsAnimation = ({
     x: -hideRectangleWidth,
     y: 0,
   }
-  const slideRightRotatedVector = rotateVector(ROTATION_ANGLE)(
+  const slideRightRotatedVector = rotateVector(hideRectangleRotationAngle)(
     slideRightUnrotatedVector,
   )
-  const slideLeftRotatedVector = rotateVector(ROTATION_ANGLE)(
+  const slideLeftRotatedVector = rotateVector(hideRectangleRotationAngle)(
     slideLeftUnrotatedVector,
   )
   const hideStrips = (refs.hideStrips as unknown) as ElementRef[]
@@ -85,9 +88,9 @@ const Strip: FC<StripProps> = flowMax(
     }),
     ['number', 'hideRectangleHeight'],
   ),
-  addProps({
-    rotationAngle: ROTATION_ANGLE,
-  }),
+  addProps(({hideRectangleRotationAngle: rotationAngle}) => ({
+    rotationAngle,
+  })),
   addProps(
     ({startPointTopCornerDistance}) => ({
       startPointTopCornerUnrotatedVector: {

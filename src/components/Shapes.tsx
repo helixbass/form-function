@@ -10,6 +10,7 @@ import HideClipPath, {
   HIDE_CLIP_PATH_ID,
   addHideClipPathContextProvider,
 } from 'components/HideClipPath'
+import {PI} from 'utils/angles'
 
 const Shapes: FC = flowMax(
   addDisplayName('Shapes'),
@@ -19,6 +20,7 @@ const Shapes: FC = flowMax(
     height: 234,
     hideRectangleWidth: 250,
     hideRectangleHeight: 230,
+    hideRectangleRotationAngle: PI / 4,
   }),
   addProps(
     ({width, height}) => ({

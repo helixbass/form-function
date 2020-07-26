@@ -11,6 +11,7 @@ import HideClipPath, {
   addHideClipPathContextProvider,
 } from 'components/HideClipPath'
 import {ElementRef} from 'utils/refs'
+import {PI} from 'utils/angles'
 
 const FMaskShape: FC = flowMax(
   addDisplayName('FMaskShape'),
@@ -111,14 +112,15 @@ const Function: FC = flowMax(
     scale: 1.4,
     width: 314,
     height: 234,
-    hideRectangleWidth: 240,
-    hideRectangleHeight: 300,
+    hideRectangleWidth: 270,
+    hideRectangleHeight: 190,
+    hideRectangleRotationAngle: -PI * 0.01,
   }),
   addProps(
     ({width, height}) => ({
       hideRectangleTopCorner: {
-        x: width * 0.45,
-        y: -height * 0.42,
+        x: width * -0.1,
+        y: -height * 0,
       },
     }),
     ['width', 'height'],

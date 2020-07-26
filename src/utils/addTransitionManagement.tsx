@@ -23,13 +23,21 @@ const addTransitionManagement: AddTransitionManagementType = (opts) =>
     addEnterAndExitTimeline,
     addRefsContext,
     addHideClipPathContext,
-    addLayoutEffectOnMount(({refs, exitTimeline, hideRectangleWidth}) => () => {
-      initializeExitTimelineHideStripsAnimation({
+    addLayoutEffectOnMount(
+      ({
         refs,
         exitTimeline,
         hideRectangleWidth,
-      })
-    }),
+        hideRectangleRotationAngle,
+      }) => () => {
+        initializeExitTimelineHideStripsAnimation({
+          refs,
+          exitTimeline,
+          hideRectangleWidth,
+          hideRectangleRotationAngle,
+        })
+      },
+    ),
     // eslint-disable-next-line ad-hok/dependencies
     addEffect(
       ({hide, enterTimeline, exitTimeline}) => () => {

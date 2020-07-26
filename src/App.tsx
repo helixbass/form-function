@@ -1,5 +1,5 @@
 import React, {FC} from 'react'
-import {flowMax, addDisplayName} from 'ad-hok'
+import {flowMax, addDisplayName, addWrapper} from 'ad-hok'
 import gsap from 'gsap'
 
 import {makeStyles} from 'utils/style'
@@ -12,21 +12,29 @@ import ButtonLink from 'components/ButtonLink'
 import Function from 'components/Function'
 import {addRouting} from 'utils/routing'
 import addTypekit from 'utils/addTypekit'
+import addRenderingDelay from 'utils/addRenderingDelay'
 
 gsap.registerPlugin(DrawSVGPlugin)
 
-const Content: FC = flowMax(addDisplayName('Content'), () => (
-  <div css={styles.contentContainer}>
-    <div css={styles.buttonsContainer}>
-      <ButtonLink toPage="form">Form</ButtonLink>
-      <ButtonLink toPage="function">Function</ButtonLink>
+const Content: FC = flowMax(
+  addDisplayName('Content'),
+  addWrapper((render) => (
+    <div css={styles.contentContainer}>
+      <div css={styles.buttonsContainer}>
+        <ButtonLink toPage="form">Form</ButtonLink>
+        <ButtonLink toPage="function">Function</ButtonLink>
+      </div>
+      <div css={styles.mainContainer}>{render()}</div>
     </div>
-    <div css={styles.mainContainer}>
+  )),
+  addRenderingDelay(1000),
+  () => (
+    <>
       <Shapes />
       <Function />
-    </div>
-  </div>
-))
+    </>
+  ),
+)
 
 const App: FC = flowMax(
   addDisplayName('App'),
