@@ -18,7 +18,6 @@ const FMaskShape: FC = flowMax(
   ({setRef}) => (
     <path
       ref={setRef('functionMasks.f')}
-      // d="M 25 99 c 10 -10, 42 -80, 34 -80 l -10 -10 l -32 80 l -9 60 l 0 20 l 10 20 l 20 -30 l 5 -35 l -20 -20 l 36 -22 l 4 -10"
       d="M 22 94 C 35 89, 67 19, 59 19 l -10 -10 l -32 80 l -9 60 l 0 20 l 10 20 l 20 -30 l 5 -35 l -20 -20 l 36 -22 l 4 -10"
       fill="none"
       stroke="white"
@@ -27,10 +26,52 @@ const FMaskShape: FC = flowMax(
   ),
 )
 
-const F_MASK_ID = 'f-clip-path'
+const F_MASK_ID = 'f-mask'
 const FMask: FC = flowMax(addDisplayName('FMask'), () => (
   <mask id={F_MASK_ID}>
     <FMaskShape />
+  </mask>
+))
+
+const LeftParenMaskShape: FC = flowMax(
+  addDisplayName('LeftParenMaskShape'),
+  addRefsContext,
+  ({setRef}) => (
+    <path
+      ref={setRef('functionMasks.leftParen')}
+      d="M 92 146 l -14 -30 l 2 -30 l 4 -30 l 12 -30 l 20 -30"
+      fill="none"
+      stroke="white"
+      strokeWidth={22}
+    />
+  ),
+)
+
+const LEFT_PAREN_MASK_ID = 'left-paren-mask'
+const LeftParenMask: FC = flowMax(addDisplayName('LeftParenMask'), () => (
+  <mask id={LEFT_PAREN_MASK_ID}>
+    <LeftParenMaskShape />
+  </mask>
+))
+
+const RightParenMaskShape: FC = flowMax(
+  addDisplayName('RightParenMaskShape'),
+  addRefsContext,
+  ({setRef}) => (
+    <path
+      ref={setRef('functionMasks.rightParen')}
+      d="M 202 148 l 18 -30 l 8 -30 l 4 -30 l -2 -30 l -14 -30"
+      fill="none"
+      stroke="white"
+      strokeWidth={22}
+    />
+  ),
+)
+
+const RIGHT_PAREN_MASK_ID = 'right-paren-mask'
+const RightParenMask: FC = flowMax(addDisplayName('RightParenMask'), () => (
+  <mask id={RIGHT_PAREN_MASK_ID}>
+    <RightParenMaskShape />
   </mask>
 ))
 
@@ -58,21 +99,26 @@ const Function: FC = flowMax(
   }),
   addRefsContext,
   addLayoutEffectOnMount(({refs, enterTimeline}) => () => {
-    const {f} = (refs.functionMasks as unknown) as {
+    const {f, leftParen, rightParen} = (refs.functionMasks as unknown) as {
       [refName: string]: ElementRef
     }
 
-    console.log({f})
     enterTimeline
       .from(f, {
         drawSVG: '0%',
         duration: 1,
+        // ease: 'sine.inOut',
       })
-      // .from(circleScribble, {
-      //   drawSVG: '0%',
-      //   duration: 6,
-      //   ease: 'linear',
-      // })
+      .from(leftParen, {
+        drawSVG: '100% 100%',
+        duration: 0.33,
+        ease: 'linear',
+      })
+      .from(rightParen, {
+        drawSVG: '100% 100%',
+        duration: 0.33,
+        ease: 'linear',
+      })
       .play()
   }),
   ({setRef: _setRef, scale, width, height}) => (
@@ -85,6 +131,8 @@ const Function: FC = flowMax(
         <defs>
           <HideClipPath />
           <FMask />
+          <LeftParenMask />
+          <RightParenMask />
         </defs>
         <g clipPath={`url(#${HIDE_CLIP_PATH_ID})`}>
           <path
@@ -93,6 +141,7 @@ const Function: FC = flowMax(
             css={styles.functionPath}
           />
           <path
+            mask={`url(#${LEFT_PAREN_MASK_ID})`}
             d="M73,71.4c0-2,1.1-4.7,1.6-6.7c6.3-22.1,15.6-44.9,31-62.5c1.6-1.6,3.6-2.2,5.8-2.2h1.8c0.9,0,4.3,0.2,5.1,1.3 c0.4,0.4,0.4,0.5,0.4,0.9c0,0.7-0.5,1.5-0.5,2.9c-0.2,1.4-1.1,2.2-1.8,3.3c-17.2,25-30.8,63.8-30.8,94.6c0,14,3.4,27.5,13.6,36.6 c0.2,0.4,0.7,0.5,0.9,0.9c0,0-0.7,0.4-0.9,0.5c-0.5,0.2-1.1,0.4-1.6,0.4c-0.4,0.2-0.7,0.2-1.1,0.2c-0.7,0-3.8,0-4.2,0.2l-3.1,0.2 c-0.4,0.2,1.1,0.5,0.7,0.5h-1.5c-1.5,0-4.9-1.6-6.3-3.1c-1.3-1.1-2.2-2-3.3-3.4c-0.4-0.4-0.4-1.6-0.9-1.6c0,0,0.2,0.4,0.2,0.5 c0-0.2-1.1-1.5-1.3-1.6l-0.5-1.3c-0.7-1.1-0.9-2-1.5-2.9l-0.7-1.1c-0.5-2.4-0.9-2.5-0.9-2.4c0-0.5-0.4-3.4-1.1-3.6 c0,0-0.4-1.5-0.7-2l-1.3-11.6v-4.2c0-2.2,0.4-4.9,0.5-7.4c0-0.9,0.2-1.6,0.2-2.5c0,0.5-0.9,1.5-1.1,1.3c0-3.3,1.8-15.2,2.4-16.1 v-1.3c0-0.5,0.2-1.8,1.3-5.3l1.8-6.3c0.2-1.3,0.7-2.7,0.9-4L73,71.4z M71.4,108.2c0-0.2,0.2-0.4,0.2-0.5v-3.8 c-0.2,0-0.4,3.3-0.4,3.8C71.2,107.8,71.4,108,71.4,108.2z M73.9,122.7c0-0.4,0.2-0.7,0.2-0.9l-1.6-9.4c0,1.8,0.4,3.6,0.5,5.6 c-0.4-0.4-0.4-1.6-0.5-2l-0.7-5.4c0,0.9,0.2,6.2,0.5,7.1c0,0.2,0.4,2.7,0.5,2.7c0.2,1.6,1.1,3.8,1.4,5.3c0,0.2,0.4,1.3,0.4,1.3 s0-0.9,0-2.4L73.9,122.7z M73.9,118.4c0,0.4,0.2,1.8,0.5,1.6c-0.2-0.4-0.5-4.7-1.1-4.5L73.9,118.4z M75.9,128 c0-0.7-0.2-1.8-0.5-2.4C75.4,126.9,75.8,127.8,75.9,128z M80.7,136.7c0-1.3-2-3.3-2-3.1c0,0.4,0.4,1.1,1.5,2.7L80.7,136.7z M83.2,137.9l-0.2-0.5c-0.2-0.7-1.3-1.3-1.6-1.5c0,0.4,0.7,1.1,1.1,1.3C82.5,137.6,83.2,138.1,83.2,137.9z M84.5,139.4 c-0.2,0.4-0.4,0.4-0.4,0.5c0.4,0.4,0.9,0.9,1.3,1.1L84.5,139.4z"
             css={styles.functionPath}
           />
@@ -101,6 +150,7 @@ const Function: FC = flowMax(
             css={styles.functionPath}
           />
           <path
+            mask={`url(#${RIGHT_PAREN_MASK_ID})`}
             d="M237.1,37.5c0.2,0.5,0.2,1.1,0.2,1.6c1.1,6.9,1.3,13.8,1.3,20.3c0,40.4-16.1,71.8-26.5,83.4l-0.5,0.4 c0-0.2,0-0.4,0.2-0.7c0-0.2,0.2-0.5,0.4-0.7h-0.7c-0.2,0-0.7,1.1-0.9,1.3l-0.4-0.7c-0.2,0.2-0.2,0.5-0.5,0.5c0-0.2,0.2-0.4,0.2-0.7 c0-0.2-0.2-0.4-0.4-0.4c-0.5,0-4.4,0.9-4.9,0.9c-0.9,0.4-1.1,0.9-1.3,1.3h-0.9c0-0.5,0.4-1.5,0.4-1.6c-0.4,0-0.9,0.2-1.1,0.2 s-0.5,0.2-0.7,0.2c0,0.4,0,0.5-0.2,0.7c-0.5,0-1.6,0.7-1.8,0.7c-0.4,0-0.5-0.4-0.7-0.4c-0.7,0-1.3,0.2-1.6,0.2 c-0.5,0-0.9-0.4-0.9-1.6c0-1.1,3.1-3.4,3.6-4.2c14.7-18.7,23.7-56.2,23.7-81c0-16.3-2.9-32.6-10-47.8c-0.4-0.4-0.5-0.7-0.7-1.3 c-0.4-0.2-0.5-0.2-0.7-0.2c0-0.2-0.4-0.5-0.4-0.7c0-0.9-2-1.5-2-2.2c0-0.7,0.2-1.4,1.5-2c1.6-1.1,6.3-1.1,8-1.1 C230.9,1.8,235.6,27.5,237.1,37.5z"
             css={styles.functionPath}
           />
